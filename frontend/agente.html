@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mercado Viva — Panel de agente</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Mercado Viva</h1>
+    <p>Panel de agente de tienda fisica</p>
+    <nav><a href="index.html">Vista de cliente</a></nav>
+  </header>
+
+  <main>
+    <section class="tarjeta" id="seccion-login">
+      <h2>Iniciar sesion</h2>
+      <form id="form-login">
+        <label for="username">Usuario</label>
+        <input id="username" name="username" type="text" required />
+
+        <label for="password">Contrasena</label>
+        <input id="password" name="password" type="password" required />
+
+        <button type="submit">Ingresar</button>
+      </form>
+      <p id="mensaje-login" class="mensaje"></p>
+    </section>
+
+    <section class="tarjeta oculto" id="seccion-panel">
+      <h2>Historial unificado del cliente</h2>
+      <form id="form-buscar">
+        <label for="identificacion">Documento o correo del cliente</label>
+        <input id="identificacion" name="identificacion" type="text" required />
+        <button type="submit">Buscar</button>
+      </form>
+      <div id="lista-casos"></div>
+
+      <button id="btn-salir" type="button">Cerrar sesion</button>
+    </section>
+  </main>
+
+  <script src="js/agente.js"></script>
+</body>
+</html>

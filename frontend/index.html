@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mercado Viva — Radicar PQR</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Mercado Viva</h1>
+    <p>Peticiones, quejas, reclamos y sugerencias</p>
+    <nav><a href="agente.html">Ingreso de agentes</a></nav>
+  </header>
+
+  <main>
+    <section class="tarjeta">
+      <h2>Radicar una PQR</h2>
+      <form id="form-pqr">
+        <label for="identificacion">Documento o correo</label>
+        <input id="identificacion" name="identificacion" type="text" required />
+
+        <label for="tipo">Tipo</label>
+        <select id="tipo" name="tipo" required>
+          <option value="peticion">Peticion</option>
+          <option value="queja">Queja</option>
+          <option value="reclamo">Reclamo</option>
+          <option value="sugerencia">Sugerencia</option>
+        </select>
+
+        <label for="descripcion">Descripcion</label>
+        <textarea id="descripcion" name="descripcion" rows="4" required></textarea>
+
+        <button type="submit">Enviar</button>
+      </form>
+      <p id="resultado-pqr" class="mensaje"></p>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Consultar mi historial</h2>
+      <form id="form-historial">
+        <label for="identificacion-historial">Documento o correo</label>
+        <input id="identificacion-historial" name="identificacion" type="text" required />
+        <button type="submit">Consultar</button>
+      </form>
+      <div id="lista-casos"></div>
+    </section>
+  </main>
+
+  <script src="js/cliente.js"></script>
+</body>
+</html>
