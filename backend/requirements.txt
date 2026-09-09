@@ -1,0 +1,11 @@
+# ---- Stack definido en el documento ----
+fastapi==0.115.2          # Backend / API REST
+pydantic==2.9.2           # Validacion de esquemas (viene con FastAPI)
+supabase==2.9.1           # Base de datos: PostgreSQL gestionado (Supabase)
+PyJWT==2.9.0              # JWT propio firmado por el backend (RNF1)
+bcrypt==4.2.0             # Cifrado (hash) de contrasenas (RNF1)
+
+# ---- Runtime minimo para poder ejecutar el stack ----
+uvicorn[standard]==0.31.0 # Servidor ASGI que ejecuta FastAPI
+python-multipart==0.0.12  # Necesario para leer formularios en FastAPI
+python-dotenv==1.0.1      # Cargar variables de entorno en local
