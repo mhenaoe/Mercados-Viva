@@ -42,7 +42,12 @@ create table if not exists casos (
     cliente_id           bigint not null references clientes(id),
     tipo                 text not null check (tipo in ('peticion','queja','reclamo','sugerencia')),
     descripcion          text not null,
-    estado               text not null default 'Abierta',
+    estado               text not null default 'abierta'
+                             check (estado in (
+                                 'abierta','en_proceso','pendiente_info','escalada',
+                                 'reabierta','resuelta_cerrada','cerrada_sin_respuesta',
+                                 'cerrada_sin_acuerdo'
+                             )),
     canal_origen         text not null check (canal_origen in ('web','tienda_fisica')),
     fecha_creacion       timestamptz not null default now(),
     fecha_actualizacion  timestamptz not null default now()
