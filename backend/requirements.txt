@@ -9,3 +9,7 @@ bcrypt==4.2.0             # Cifrado (hash) de contrasenas (RNF1)
 uvicorn[standard]==0.31.0 # Servidor ASGI que ejecuta FastAPI
 python-multipart==0.0.12  # Necesario para leer formularios en FastAPI
 python-dotenv==1.0.1      # Cargar variables de entorno en local
+
+# ---- Pruebas ----
+pytest==8.3.3
+httpx==0.27.2              # Requerido por fastapi.testclient.TestClient
