@@ -11,6 +11,63 @@ const listaCasos = document.getElementById("lista-casos");
 const btnSalir = document.getElementById("btn-salir");
 const formPqrAgente = document.getElementById("form-pqr-agente");
 const resultadoPqrAgente = document.getElementById("resultado-pqr-agente");
+const barraSesion = document.getElementById("barra-sesion");
+const horaInicioSesion = document.getElementById("hora-inicio-sesion");
+const tiempoRestanteSesion = document.getElementById("tiempo-restante-sesion");
+
+let intervaloSesion = null;
+
+// Decodifica el payload de un JWT (sin verificar la firma: eso ya lo hizo
+// el backend). Se usa solo para mostrar "iat"/"exp" en la interfaz.
+function decodificarJWT(token) {
+  let base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+  base64 += "=".repeat((4 - (base64.length % 4)) % 4);
+  return JSON.parse(atob(base64));
+}
+
+// Muestra la hora de inicio de sesion y arranca un cronometro que cuenta
+// hacia atras hasta que expire el JWT (2 horas, ver JWT_EXP_MINUTES en el
+// backend). Al llegar a cero, cierra la sesion automaticamente.
+function iniciarCronometroSesion(token) {
+  let payload;
+  try {
+    payload = decodificarJWT(token);
+  } catch (error) {
+    return;
+  }
+  if (!payload.iat || !payload.exp) return;
+
+  const expiraEn = payload.exp * 1000;
+  horaInicioSesion.textContent = new Date(payload.iat * 1000).toLocaleTimeString();
+  barraSesion.classList.remove("oculto");
+
+  function actualizar() {
+    const restanteMs = expiraEn - Date.now();
+    if (restanteMs <= 0) {
+      tiempoRestanteSesion.textContent = "expirada";
+      cerrarSesion();
+      return;
+    }
+    const totalSeg = Math.floor(restanteMs / 1000);
+    const horas = Math.floor(totalSeg / 3600);
+    const minutos = Math.floor((totalSeg % 3600) / 60);
+    const segundos = totalSeg % 60;
+    tiempoRestanteSesion.textContent = `${horas}:${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
+  }
+
+  if (intervaloSesion) clearInterval(intervaloSesion);
+  actualizar();
+  intervaloSesion = setInterval(actualizar, 1000);
+}
+
+function cerrarSesion() {
+  if (intervaloSesion) clearInterval(intervaloSesion);
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USUARIO_KEY);
+  listaCasos.innerHTML = "";
+  barraSesion.classList.add("oculto");
+  mostrarLogin();
+}
 
 // FastAPI/Pydantic devuelve los errores 422 como una lista en "detail",
 // cada uno con "loc" (el campo que fallo) y "msg". Esta funcion arma un
@@ -41,6 +98,7 @@ function mostrarLogin() {
 
 if (localStorage.getItem(TOKEN_KEY)) {
   mostrarPanel();
+  iniciarCronometroSesion(localStorage.getItem(TOKEN_KEY));
 }
 
 formLogin.addEventListener("submit", async (evento) => {
@@ -67,17 +125,13 @@ formLogin.addEventListener("submit", async (evento) => {
     mensajeLogin.textContent = "";
     formLogin.reset();
     mostrarPanel();
+    iniciarCronometroSesion(cuerpo.access_token);
   } catch (error) {
     mensajeLogin.textContent = "No se pudo conectar con el servidor.";
   }
 });
 
-btnSalir.addEventListener("click", () => {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USUARIO_KEY);
-  listaCasos.innerHTML = "";
-  mostrarLogin();
-});
+btnSalir.addEventListener("click", cerrarSesion);
 
 formPqrAgente.addEventListener("submit", async (evento) => {
   evento.preventDefault();
@@ -146,6 +200,7 @@ function renderizarCasos(casos) {
           <p><strong>Estado actual:</strong> <span class="estado">${caso.estado}</span></p>
           <p>${caso.descripcion}</p>
           <p class="canal">Canal de origen: ${caso.canal_origen}</p>
+          ${renderizarEvidencias(caso.evidencias)}
 
           <form class="form-actualizar-estado">
             <label>Nuevo estado</label>
@@ -161,6 +216,22 @@ function renderizarCasos(casos) {
   listaCasos.querySelectorAll(".form-actualizar-estado").forEach((form) => {
     form.addEventListener("submit", actualizarEstado);
   });
+}
+
+function renderizarEvidencias(evidencias) {
+  if (!evidencias || evidencias.length === 0) {
+    return "";
+  }
+
+  const items = evidencias
+    .map((ev) =>
+      ev.tipo === "texto"
+        ? `<li>${ev.contenido_texto}</li>`
+        : `<li><a href="${ev.archivo_url}" target="_blank" rel="noopener">${ev.archivo_nombre}</a></li>`
+    )
+    .join("");
+
+  return `<div class="evidencias"><strong>Evidencia:</strong><ul>${items}</ul></div>`;
 }
 
 async function actualizarEstado(evento) {

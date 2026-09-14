@@ -45,5 +45,32 @@ create table if not exists historial_casos (
   fecha timestamptz not null default now()
 );
 
+-- ------------------------------------------------------------
+-- Tabla: evidencias
+-- Notas de texto y/o archivos (fotos, PDF) que el cliente adjunta
+-- a un caso como respaldo de la PQR.
+-- ------------------------------------------------------------
+create table if not exists evidencias (
+  id uuid primary key default gen_random_uuid(),
+  caso_id uuid not null references casos(id),
+  tipo text not null check (tipo in ('texto','archivo')),
+  contenido_texto text,
+  archivo_path text,
+  archivo_nombre text,
+  creado_en timestamptz not null default now()
+);
+
 create index if not exists idx_casos_cliente on casos(cliente_id);
 create index if not exists idx_historial_caso on historial_casos(caso_id);
+create index if not exists idx_evidencias_caso on evidencias(caso_id);
+
+-- ------------------------------------------------------------
+-- Bucket de Storage para los archivos de evidencia (privado).
+-- El backend tambien lo crea solo la primera vez que se necesita
+-- (ver app/models/evidencia_model.py), asi que este INSERT es
+-- opcional/redundante -- lo dejamos aqui para que quede documentado
+-- como parte de la infraestructura del proyecto.
+-- ------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('evidencias', 'evidencias', false)
+on conflict (id) do nothing;

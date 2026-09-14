@@ -44,11 +44,47 @@ form.addEventListener("submit", async (evento) => {
     }
 
     resultado.textContent = `Caso radicado con exito. Numero de caso: ${cuerpo.id}`;
+    await subirEvidencia(cuerpo.id);
     form.reset();
   } catch (error) {
     resultado.textContent = "No se pudo conectar con el servidor.";
   }
 });
+
+// Sube (si hay algo que subir) el texto y/o los archivos de evidencia
+// para el caso recien creado. Es un segundo POST porque /pqr solo acepta
+// JSON y los archivos necesitan multipart/form-data.
+async function subirEvidencia(casoId) {
+  const texto = form.evidenciaTexto.value.trim();
+  const archivos = form.evidenciaArchivos.files;
+
+  if (!texto && archivos.length === 0) {
+    return;
+  }
+
+  const formData = new FormData();
+  if (texto) formData.append("texto", texto);
+  for (const archivo of archivos) {
+    formData.append("archivos", archivo);
+  }
+
+  try {
+    const resp = await fetch(`/casos/${casoId}/evidencias`, {
+      method: "POST",
+      body: formData,
+    });
+    const cuerpo = await resp.json();
+
+    if (!resp.ok) {
+      resultado.textContent += ` (evidencia no guardada: ${mensajeDeError(cuerpo)})`;
+      return;
+    }
+
+    resultado.textContent += " Evidencia adjuntada.";
+  } catch (error) {
+    resultado.textContent += " (no se pudo adjuntar la evidencia: sin conexion)";
+  }
+}
 
 formHistorial.addEventListener("submit", async (evento) => {
   evento.preventDefault();
@@ -78,6 +114,7 @@ formHistorial.addEventListener("submit", async (evento) => {
             <p><strong>Estado actual:</strong> ${caso.estado}</p>
             <p>${caso.descripcion}</p>
             <p class="canal">Canal de origen: ${caso.canal_origen}</p>
+            ${renderizarEvidencias(caso.evidencias)}
           </article>
         `
       )
@@ -86,3 +123,19 @@ formHistorial.addEventListener("submit", async (evento) => {
     listaCasos.innerHTML = "<p>No se pudo conectar con el servidor.</p>";
   }
 });
+
+function renderizarEvidencias(evidencias) {
+  if (!evidencias || evidencias.length === 0) {
+    return "";
+  }
+
+  const items = evidencias
+    .map((ev) =>
+      ev.tipo === "texto"
+        ? `<li>${ev.contenido_texto}</li>`
+        : `<li><a href="${ev.archivo_url}" target="_blank" rel="noopener">${ev.archivo_nombre}</a></li>`
+    )
+    .join("");
+
+  return `<div class="evidencias"><strong>Evidencia:</strong><ul>${items}</ul></div>`;
+}

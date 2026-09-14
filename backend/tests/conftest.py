@@ -12,7 +12,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.models import agente_model, caso_model, cliente_model, historial_model
+from app.models import agente_model, caso_model, cliente_model, evidencia_model, historial_model
 from app.security import hash_password
 
 
@@ -22,6 +22,8 @@ class _BaseDatosMemoria:
         self.casos: list[dict] = []
         self.historial: list[dict] = []
         self.agentes: list[dict] = []
+        self.evidencias: list[dict] = []
+        self.archivos_subidos: dict[str, bytes] = {}
 
 
 @pytest.fixture
@@ -86,6 +88,41 @@ def client(monkeypatch):
     def agente_obtener_por_username(username):
         return next((a for a in db.agentes if a["username"] == username), None)
 
+    def evidencia_crear_texto(caso_id, contenido_texto):
+        fila = {
+            "id": str(uuid.uuid4()),
+            "caso_id": caso_id,
+            "tipo": "texto",
+            "contenido_texto": contenido_texto,
+            "archivo_path": None,
+            "archivo_nombre": None,
+            "creado_en": "2026-01-01T00:00:00Z",
+        }
+        db.evidencias.append(fila)
+        return fila
+
+    def evidencia_crear_archivo(caso_id, archivo_path, archivo_nombre):
+        fila = {
+            "id": str(uuid.uuid4()),
+            "caso_id": caso_id,
+            "tipo": "archivo",
+            "contenido_texto": None,
+            "archivo_path": archivo_path,
+            "archivo_nombre": archivo_nombre,
+            "creado_en": "2026-01-01T00:00:00Z",
+        }
+        db.evidencias.append(fila)
+        return fila
+
+    def evidencia_listar_por_caso(caso_id):
+        return [dict(e) for e in db.evidencias if e["caso_id"] == caso_id]
+
+    def evidencia_subir_archivo(path, contenido, content_type):
+        db.archivos_subidos[path] = contenido
+
+    def evidencia_generar_url_firmada(path, expira_segundos=3600):
+        return f"https://fake-storage.test/{path}?expira_en={expira_segundos}"
+
     monkeypatch.setattr(cliente_model, "obtener_por_identificacion", cliente_obtener_por_identificacion)
     monkeypatch.setattr(cliente_model, "crear", cliente_crear)
     monkeypatch.setattr(caso_model, "crear", caso_crear)
@@ -95,6 +132,11 @@ def client(monkeypatch):
     monkeypatch.setattr(historial_model, "crear", historial_crear)
     monkeypatch.setattr(historial_model, "listar_por_caso", historial_listar_por_caso)
     monkeypatch.setattr(agente_model, "obtener_por_username", agente_obtener_por_username)
+    monkeypatch.setattr(evidencia_model, "crear_texto", evidencia_crear_texto)
+    monkeypatch.setattr(evidencia_model, "crear_archivo", evidencia_crear_archivo)
+    monkeypatch.setattr(evidencia_model, "listar_por_caso", evidencia_listar_por_caso)
+    monkeypatch.setattr(evidencia_model, "subir_archivo", evidencia_subir_archivo)
+    monkeypatch.setattr(evidencia_model, "generar_url_firmada", evidencia_generar_url_firmada)
 
     db.agentes.append(
         {

@@ -28,6 +28,10 @@ class CredencialesInvalidasError(Exception):
     """Usuario o contrasena incorrectos (-> 401)."""
 
 
+class EvidenciaInvalidaError(Exception):
+    """El archivo adjunto no cumple el tipo o tamano permitido (-> 422)."""
+
+
 def registrar_manejadores_de_error(app: FastAPI) -> None:
     """Registra los exception handlers de negocio sobre la app de FastAPI."""
 
@@ -54,3 +58,7 @@ def registrar_manejadores_de_error(app: FastAPI) -> None:
             status_code=401,
             content={"detail": "Usuario o contrasena incorrectos."},
         )
+
+    @app.exception_handler(EvidenciaInvalidaError)
+    async def _evidencia_invalida(request: Request, exc: EvidenciaInvalidaError):
+        return JSONResponse(status_code=422, content={"detail": str(exc)})

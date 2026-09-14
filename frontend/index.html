@@ -34,6 +34,12 @@
         <label for="descripcion">Descripcion</label>
         <textarea id="descripcion" name="descripcion" rows="4" required></textarea>
 
+        <label for="evidencia-texto">Evidencia adicional en texto (opcional)</label>
+        <textarea id="evidencia-texto" name="evidenciaTexto" rows="3"></textarea>
+
+        <label for="evidencia-archivos">Adjuntar fotos o archivos (opcional, max. 5 MB c/u)</label>
+        <input id="evidencia-archivos" name="evidenciaArchivos" type="file" accept="image/*,application/pdf" multiple />
+
         <button type="submit">Enviar</button>
       </form>
       <p id="resultado-pqr" class="mensaje"></p>

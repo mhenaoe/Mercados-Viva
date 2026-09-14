@@ -5,6 +5,7 @@ el historial unificado de un cliente.
 from app.exceptions import NoEncontradoError
 from app.models import caso_model, cliente_model, historial_model
 from app.schemas.pqr_schemas import PQRCrear
+from app.services import evidencia_service
 
 # El contrato de POST /pqr no incluye un campo "responsable": se deriva
 # del canal por el que se radica (el cliente radica desde la web, el
@@ -54,5 +55,6 @@ def obtener_historial(identificacion: str) -> dict:
     casos = caso_model.listar_por_cliente(cliente["id"])
     for caso in casos:
         caso["historial"] = historial_model.listar_por_caso(caso["id"])
+        caso["evidencias"] = evidencia_service.listar_para_caso(caso["id"])
 
     return {"cliente": cliente, "casos": casos}

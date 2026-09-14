@@ -6,6 +6,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.schemas.evidencia_schemas import EvidenciaOut
+
 
 class CasoActualizar(BaseModel):
     estado_nuevo: str = Field(..., min_length=1, description="Nuevo estado solicitado para el caso")
@@ -36,3 +38,4 @@ class CasoOut(BaseModel):
     creado_en: datetime
     actualizado_en: datetime
     historial: list[EventoHistorial] = []
+    evidencias: list[EvidenciaOut] = []
