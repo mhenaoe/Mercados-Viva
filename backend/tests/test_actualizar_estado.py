@@ -12,10 +12,10 @@ def test_transicion_valida(client):
         "/pqr",
         json={
             "identificacion": "789",
+            "nombre": "Carlos Diaz",
             "tipo": "peticion",
             "descripcion": "Solicito copia de la factura.",
             "canal_origen": "web",
-            "responsable": "cliente",
         },
     ).json()
 
@@ -23,13 +23,18 @@ def test_transicion_valida(client):
 
     resp = client.patch(
         f"/casos/{creado['id']}",
-        json={"estado": "en_proceso", "responsable": "agente1", "canal": "tienda_fisica"},
+        json={"estado_nuevo": "en_proceso", "responsable": "agente1"},
         headers={"Authorization": f"Bearer {token}"},
     )
 
     assert resp.status_code == 200
     cuerpo = resp.json()
+    assert cuerpo["id"] == creado["id"]
     assert cuerpo["estado"] == "en_proceso"
-    assert len(cuerpo["historial"]) == 2
-    assert cuerpo["historial"][-1]["estado_anterior"] == "abierta"
-    assert cuerpo["historial"][-1]["estado_nuevo"] == "en_proceso"
+    assert "actualizado_en" in cuerpo
+
+    historial = client.get("/historial/789").json()
+    eventos = historial["casos"][0]["historial"]
+    assert len(eventos) == 2
+    assert eventos[-1]["estado_anterior"] == "abierta"
+    assert eventos[-1]["estado_nuevo"] == "en_proceso"

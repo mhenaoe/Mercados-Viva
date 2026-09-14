@@ -9,12 +9,17 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 TipoPQR = Literal["peticion", "queja", "reclamo", "sugerencia"]
-CanalOrigen = Literal["web", "tienda_fisica"]
+CanalOrigen = Literal["web", "tienda"]
 
 
 class PQRCrear(BaseModel):
     identificacion: str = Field(..., min_length=1, description="Documento o email del cliente")
+    nombre: str = Field(..., min_length=1)
     tipo: TipoPQR
     descripcion: str = Field(..., min_length=1)
     canal_origen: CanalOrigen
-    responsable: str = Field(..., min_length=1, description="Quien radica: 'cliente' o el nombre del agente")
+
+
+class PQRCreada(BaseModel):
+    id: str
+    estado: str

@@ -20,6 +20,11 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 
 # --- JWT propio (autenticacion de agentes, RNF1) ---
-JWT_SECRET = os.getenv("JWT_SECRET", "cambia-esta-clave-en-produccion")
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise RuntimeError(
+        "JWT_SECRET no esta configurado. Definelo en el archivo .env (local) "
+        "o en las variables de entorno de Render (produccion)."
+    )
 JWT_ALGORITHM = "HS256"
 JWT_EXP_MINUTES = int(os.getenv("JWT_EXP_MINUTES", "120"))

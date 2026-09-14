@@ -12,10 +12,10 @@ def test_transicion_invalida_responde_400(client):
         "/pqr",
         json={
             "identificacion": "555",
+            "nombre": "Marta Lopez",
             "tipo": "sugerencia",
             "descripcion": "Ampliar horario de atencion.",
             "canal_origen": "web",
-            "responsable": "cliente",
         },
     ).json()
 
@@ -23,7 +23,7 @@ def test_transicion_invalida_responde_400(client):
 
     resp = client.patch(
         f"/casos/{creado['id']}",
-        json={"estado": "resuelta_cerrada", "responsable": "agente1", "canal": "web"},
+        json={"estado_nuevo": "resuelta_cerrada", "responsable": "agente1"},
         headers={"Authorization": f"Bearer {token}"},
     )
 

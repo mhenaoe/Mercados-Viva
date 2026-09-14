@@ -24,12 +24,12 @@ def obtener_por_identificacion(identificacion: str) -> dict | None:
     return filas[0] if filas else None
 
 
-def crear(identificacion: str) -> dict:
-    """Inserta un cliente nuevo con su identificacion."""
+def crear(identificacion: str, nombre: str) -> dict:
+    """Inserta un cliente nuevo con su identificacion y nombre."""
     resp = (
         get_supabase()
         .table(TABLA)
-        .insert({"identificacion": identificacion})
+        .insert({"identificacion": identificacion, "nombre": nombre})
         .execute()
     )
     return resp.data[0]

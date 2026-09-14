@@ -28,6 +28,31 @@
       <p id="mensaje-login" class="mensaje"></p>
     </section>
 
+    <section class="tarjeta oculto" id="seccion-radicar">
+      <h2>Radicar una PQR a nombre de un cliente</h2>
+      <form id="form-pqr-agente">
+        <label for="identificacion-pqr">Documento o correo del cliente</label>
+        <input id="identificacion-pqr" name="identificacion" type="text" required />
+
+        <label for="nombre-pqr">Nombre completo del cliente</label>
+        <input id="nombre-pqr" name="nombre" type="text" required />
+
+        <label for="tipo-pqr">Tipo</label>
+        <select id="tipo-pqr" name="tipo" required>
+          <option value="peticion">Peticion</option>
+          <option value="queja">Queja</option>
+          <option value="reclamo">Reclamo</option>
+          <option value="sugerencia">Sugerencia</option>
+        </select>
+
+        <label for="descripcion-pqr">Descripcion</label>
+        <textarea id="descripcion-pqr" name="descripcion" rows="4" required></textarea>
+
+        <button type="submit">Radicar</button>
+      </form>
+      <p id="resultado-pqr-agente" class="mensaje"></p>
+    </section>
+
     <section class="tarjeta oculto" id="seccion-panel">
       <h2>Historial unificado del cliente</h2>
       <form id="form-buscar">

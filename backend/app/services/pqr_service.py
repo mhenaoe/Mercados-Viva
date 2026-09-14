@@ -6,11 +6,13 @@ from app.exceptions import NoEncontradoError
 from app.models import caso_model, cliente_model, historial_model
 from app.schemas.pqr_schemas import PQRCrear
 
-
-def _generar_numero_caso() -> str:
-    """Genera un numero_caso correlativo tipo PQR-00001."""
-    consecutivo = caso_model.contar() + 1
-    return f"PQR-{consecutivo:05d}"
+# El contrato de POST /pqr no incluye un campo "responsable": se deriva
+# del canal por el que se radica (el cliente radica desde la web, el
+# agente desde la tienda), que es el unico dato disponible en el body.
+RESPONSABLE_POR_CANAL = {
+    "web": "cliente",
+    "tienda": "agente",
+}
 
 
 def crear_pqr(datos: PQRCrear) -> dict:
@@ -18,11 +20,10 @@ def crear_pqr(datos: PQRCrear) -> dict:
     estado 'abierta' y registra el evento inicial en el historial."""
     cliente = cliente_model.obtener_por_identificacion(datos.identificacion)
     if cliente is None:
-        cliente = cliente_model.crear(datos.identificacion)
+        cliente = cliente_model.crear(datos.identificacion, datos.nombre)
 
     caso = caso_model.crear(
         cliente_id=cliente["id"],
-        numero_caso=_generar_numero_caso(),
         tipo=datos.tipo,
         descripcion=datos.descripcion,
         estado="abierta",
@@ -33,8 +34,8 @@ def crear_pqr(datos: PQRCrear) -> dict:
         caso_id=caso["id"],
         estado_anterior=None,
         estado_nuevo="abierta",
+        responsable=RESPONSABLE_POR_CANAL[datos.canal_origen],
         canal=datos.canal_origen,
-        responsable=datos.responsable,
     )
 
     caso["historial"] = historial_model.listar_por_caso(caso["id"])

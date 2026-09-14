@@ -8,28 +8,31 @@ from pydantic import BaseModel, Field
 
 
 class CasoActualizar(BaseModel):
-    estado: str = Field(..., min_length=1, description="Nuevo estado solicitado para el caso")
+    estado_nuevo: str = Field(..., min_length=1, description="Nuevo estado solicitado para el caso")
     responsable: str = Field(..., min_length=1)
-    canal: str = Field(..., min_length=1)
+
+
+class CasoActualizado(BaseModel):
+    id: str
+    estado: str
+    actualizado_en: datetime
 
 
 class EventoHistorial(BaseModel):
-    id: int
+    id: str
     estado_anterior: str | None
     estado_nuevo: str
-    canal: str
     responsable: str
-    respuesta: str | None
+    canal: str
     fecha: datetime
 
 
 class CasoOut(BaseModel):
-    id: int
-    numero_caso: str
+    id: str
     tipo: str
     descripcion: str
     estado: str
     canal_origen: str
-    fecha_creacion: datetime
-    fecha_actualizacion: datetime
+    creado_en: datetime
+    actualizado_en: datetime
     historial: list[EventoHistorial] = []

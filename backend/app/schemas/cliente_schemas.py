@@ -10,9 +10,10 @@ from app.schemas.caso_schemas import CasoOut
 
 
 class ClienteOut(BaseModel):
-    id: int
+    id: str
     identificacion: str
-    fecha_registro: datetime
+    nombre: str
+    creado_en: datetime
 
 
 class HistorialClienteOut(BaseModel):

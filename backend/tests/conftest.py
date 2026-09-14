@@ -6,6 +6,8 @@ capa models (caso_model, cliente_model, historial_model, agente_model)
 por una base de datos en memoria, para poder probar routers y services
 de forma aislada y repetible.
 """
+import uuid
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -20,9 +22,6 @@ class _BaseDatosMemoria:
         self.casos: list[dict] = []
         self.historial: list[dict] = []
         self.agentes: list[dict] = []
-        self._sig_cliente = 1
-        self._sig_caso = 1
-        self._sig_historial = 1
 
 
 @pytest.fixture
@@ -32,30 +31,28 @@ def client(monkeypatch):
     def cliente_obtener_por_identificacion(identificacion):
         return next((c for c in db.clientes if c["identificacion"] == identificacion), None)
 
-    def cliente_crear(identificacion):
+    def cliente_crear(identificacion, nombre):
         fila = {
-            "id": db._sig_cliente,
+            "id": str(uuid.uuid4()),
             "identificacion": identificacion,
-            "fecha_registro": "2026-01-01T00:00:00Z",
+            "nombre": nombre,
+            "creado_en": "2026-01-01T00:00:00Z",
         }
         db.clientes.append(fila)
-        db._sig_cliente += 1
         return fila
 
-    def caso_crear(cliente_id, numero_caso, tipo, descripcion, estado, canal_origen):
+    def caso_crear(cliente_id, tipo, descripcion, estado, canal_origen):
         fila = {
-            "id": db._sig_caso,
+            "id": str(uuid.uuid4()),
             "cliente_id": cliente_id,
-            "numero_caso": numero_caso,
             "tipo": tipo,
             "descripcion": descripcion,
             "estado": estado,
             "canal_origen": canal_origen,
-            "fecha_creacion": "2026-01-01T00:00:00Z",
-            "fecha_actualizacion": "2026-01-01T00:00:00Z",
+            "creado_en": "2026-01-01T00:00:00Z",
+            "actualizado_en": "2026-01-01T00:00:00Z",
         }
         db.casos.append(fila)
-        db._sig_caso += 1
         return fila
 
     def caso_obtener_por_id(caso_id):
@@ -67,25 +64,20 @@ def client(monkeypatch):
     def caso_actualizar_estado(caso_id, nuevo_estado):
         caso = caso_obtener_por_id(caso_id)
         caso["estado"] = nuevo_estado
-        caso["fecha_actualizacion"] = "2026-01-02T00:00:00Z"
+        caso["actualizado_en"] = "2026-01-02T00:00:00Z"
         return dict(caso)
 
-    def caso_contar():
-        return len(db.casos)
-
-    def historial_crear(caso_id, estado_anterior, estado_nuevo, canal, responsable, respuesta=None):
+    def historial_crear(caso_id, estado_anterior, estado_nuevo, responsable, canal):
         fila = {
-            "id": db._sig_historial,
+            "id": str(uuid.uuid4()),
             "caso_id": caso_id,
             "estado_anterior": estado_anterior,
             "estado_nuevo": estado_nuevo,
-            "canal": canal,
             "responsable": responsable,
-            "respuesta": respuesta,
+            "canal": canal,
             "fecha": "2026-01-01T00:00:00Z",
         }
         db.historial.append(fila)
-        db._sig_historial += 1
         return fila
 
     def historial_listar_por_caso(caso_id):
@@ -100,14 +92,13 @@ def client(monkeypatch):
     monkeypatch.setattr(caso_model, "obtener_por_id", caso_obtener_por_id)
     monkeypatch.setattr(caso_model, "listar_por_cliente", caso_listar_por_cliente)
     monkeypatch.setattr(caso_model, "actualizar_estado", caso_actualizar_estado)
-    monkeypatch.setattr(caso_model, "contar", caso_contar)
     monkeypatch.setattr(historial_model, "crear", historial_crear)
     monkeypatch.setattr(historial_model, "listar_por_caso", historial_listar_por_caso)
     monkeypatch.setattr(agente_model, "obtener_por_username", agente_obtener_por_username)
 
     db.agentes.append(
         {
-            "id": 1,
+            "id": str(uuid.uuid4()),
             "username": "agente1",
             "password_hash": hash_password("clave123"),
             "nombre": "Agente de Prueba",

@@ -8,7 +8,7 @@ from app.exceptions import NoEncontradoError, TransicionInvalidaError
 from app.models import caso_model, historial_model
 
 TRANSICIONES_VALIDAS: dict[str, list[str]] = {
-    "abierta": ["en_proceso", "escalada", "cerrada_sin_respuesta"],
+    "abierta": ["en_proceso", "escalada"],
     "en_proceso": ["pendiente_info", "escalada", "resuelta_cerrada", "cerrada_sin_acuerdo"],
     "pendiente_info": ["en_proceso", "cerrada_sin_respuesta"],
     "escalada": ["en_proceso", "resuelta_cerrada", "cerrada_sin_acuerdo"],
@@ -18,8 +18,13 @@ TRANSICIONES_VALIDAS: dict[str, list[str]] = {
     "cerrada_sin_acuerdo": ["reabierta"],
 }
 
+# El contrato de PATCH /casos/{id} no incluye un campo "canal": solo lo
+# puede invocar un agente autenticado (JWT), asi que el canal del evento
+# de historial es siempre 'tienda'.
+CANAL_ACTUALIZACION = "tienda"
 
-def actualizar_estado(caso_id: int, nuevo_estado: str, responsable: str, canal: str) -> dict:
+
+def actualizar_estado(caso_id: str, nuevo_estado: str, responsable: str) -> dict:
     """Valida la transicion de estado de un caso y, si es valida, actualiza
     el caso y deja constancia del cambio en el historial."""
     caso = caso_model.obtener_por_id(caso_id)
@@ -38,9 +43,8 @@ def actualizar_estado(caso_id: int, nuevo_estado: str, responsable: str, canal: 
         caso_id=caso_id,
         estado_anterior=estado_actual,
         estado_nuevo=nuevo_estado,
-        canal=canal,
         responsable=responsable,
+        canal=CANAL_ACTUALIZACION,
     )
 
-    caso_actualizado["historial"] = historial_model.listar_por_caso(caso_id)
     return caso_actualizado

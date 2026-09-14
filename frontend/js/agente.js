@@ -3,18 +3,38 @@ const USUARIO_KEY = "mercado_viva_usuario";
 
 const seccionLogin = document.getElementById("seccion-login");
 const seccionPanel = document.getElementById("seccion-panel");
+const seccionRadicar = document.getElementById("seccion-radicar");
 const formLogin = document.getElementById("form-login");
 const mensajeLogin = document.getElementById("mensaje-login");
 const formBuscar = document.getElementById("form-buscar");
 const listaCasos = document.getElementById("lista-casos");
 const btnSalir = document.getElementById("btn-salir");
+const formPqrAgente = document.getElementById("form-pqr-agente");
+const resultadoPqrAgente = document.getElementById("resultado-pqr-agente");
+
+// FastAPI/Pydantic devuelve los errores 422 como una lista en "detail",
+// cada uno con "loc" (el campo que fallo) y "msg". Esta funcion arma un
+// mensaje legible campo por campo en vez de mostrar la lista cruda.
+function mensajeDeError(cuerpo) {
+  if (Array.isArray(cuerpo?.detail)) {
+    return cuerpo.detail
+      .map((err) => {
+        const campo = Array.isArray(err.loc) ? err.loc[err.loc.length - 1] : "campo";
+        return `${campo}: ${err.msg}`;
+      })
+      .join(" | ");
+  }
+  return cuerpo?.detail || "Ocurrio un error inesperado.";
+}
 
 function mostrarPanel() {
   seccionLogin.classList.add("oculto");
+  seccionRadicar.classList.remove("oculto");
   seccionPanel.classList.remove("oculto");
 }
 
 function mostrarLogin() {
+  seccionRadicar.classList.add("oculto");
   seccionPanel.classList.add("oculto");
   seccionLogin.classList.remove("oculto");
 }
@@ -38,7 +58,7 @@ formLogin.addEventListener("submit", async (evento) => {
     const cuerpo = await resp.json();
 
     if (!resp.ok) {
-      mensajeLogin.textContent = cuerpo.detail || "Usuario o contrasena incorrectos.";
+      mensajeLogin.textContent = cuerpo.detail ? mensajeDeError(cuerpo) : "Usuario o contrasena incorrectos.";
       return;
     }
 
@@ -59,6 +79,38 @@ btnSalir.addEventListener("click", () => {
   mostrarLogin();
 });
 
+formPqrAgente.addEventListener("submit", async (evento) => {
+  evento.preventDefault();
+  resultadoPqrAgente.textContent = "Enviando...";
+
+  const datos = {
+    identificacion: formPqrAgente.identificacion.value.trim(),
+    nombre: formPqrAgente.nombre.value.trim(),
+    tipo: formPqrAgente.tipo.value,
+    descripcion: formPqrAgente.descripcion.value.trim(),
+    canal_origen: "tienda",
+  };
+
+  try {
+    const resp = await fetch("/pqr", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos),
+    });
+    const cuerpo = await resp.json();
+
+    if (!resp.ok) {
+      resultadoPqrAgente.textContent = `Error: ${mensajeDeError(cuerpo)}`;
+      return;
+    }
+
+    resultadoPqrAgente.textContent = `Caso radicado con exito. Numero de caso: ${cuerpo.id}`;
+    formPqrAgente.reset();
+  } catch (error) {
+    resultadoPqrAgente.textContent = "No se pudo conectar con el servidor.";
+  }
+});
+
 formBuscar.addEventListener("submit", async (evento) => {
   evento.preventDefault();
   listaCasos.innerHTML = "Buscando...";
@@ -70,7 +122,7 @@ formBuscar.addEventListener("submit", async (evento) => {
     const cuerpo = await resp.json();
 
     if (!resp.ok) {
-      listaCasos.innerHTML = `<p>${cuerpo.detail || "No se encontro historial para esa identificacion."}</p>`;
+      listaCasos.innerHTML = `<p>${cuerpo.detail ? mensajeDeError(cuerpo) : "No se encontro historial para esa identificacion."}</p>`;
       return;
     }
 
@@ -90,7 +142,7 @@ function renderizarCasos(casos) {
     .map(
       (caso) => `
         <article class="caso" data-caso-id="${caso.id}">
-          <h3>${caso.numero_caso} — ${caso.tipo}</h3>
+          <h3>${caso.id} — ${caso.tipo}</h3>
           <p><strong>Estado actual:</strong> <span class="estado">${caso.estado}</span></p>
           <p>${caso.descripcion}</p>
           <p class="canal">Canal de origen: ${caso.canal_origen}</p>
@@ -130,16 +182,15 @@ async function actualizarEstado(evento) {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        estado: form.estado.value.trim(),
+        estado_nuevo: form.estado.value.trim(),
         responsable: usuario,
-        canal: "tienda_fisica",
       }),
     });
     const cuerpo = await resp.json();
 
     if (!resp.ok) {
       const validos = (cuerpo.estados_validos_siguientes || []).join(", ");
-      mensaje.textContent = `${cuerpo.detail || "No se pudo actualizar el estado."}${
+      mensaje.textContent = `${mensajeDeError(cuerpo)}${
         validos ? ` Estados validos: ${validos}.` : ""
       }`;
       return;
