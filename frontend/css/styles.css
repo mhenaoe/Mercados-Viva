@@ -1,11 +1,11 @@
 :root {
-  --color-primario: #1f6f4a;
-  --color-primario-oscuro: #154b32;
-  --color-fondo: #f5f7f5;
+  --color-primario: #e14a2b;
+  --color-primario-oscuro: #b93a21;
+  --color-fondo: #f5efe3;
   --color-tarjeta: #ffffff;
-  --color-texto: #1c1c1c;
-  --color-borde: #d9dfd9;
-  --color-error: #b3261e;
+  --color-texto: #171717;
+  --color-borde: #e6ddcb;
+  --color-error: #7a1f12;
 }
 
 * {
@@ -109,7 +109,7 @@ button:hover {
 }
 
 .canal {
-  color: #555;
+  color: #6b6357;
   font-size: 0.85rem;
 }
 
